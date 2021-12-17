@@ -30,36 +30,82 @@ async function run() {
         const cartProductsCollection = database.collection("cartProducts");
         const wishListProductCollection = database.collection("wishListProducts");
         const reviewCollection = database.collection("userReview");
+        const userCollection = database.collection("users");
 
+
+        // saved user info
+        app.post('/user', async (req, res) => {
+            const cursor = req.body;
+            const result = await userCollection.insertOne(cursor);
+            res.send(result)
+        })
+        // get saved user info
+        app.get('/makeAdmin/:email', async (req, res) => {
+            const email = req?.params?.email;
+            const query = { email: email };
+            const result = await userCollection.findOne(query);
+            res.send(result)
+        })
+        // add admin role
+        app.put('/makeAdmin/:email', async (req, res) => {
+            const email = req?.params?.email;
+            const query = { email: email }
+            if (query) {
+                const updateDoc = {
+                    $set: {
+                        role: `admin`
+                    },
+                };
+                const result = await userCollection.updateOne(query, updateDoc);
+                res.send(result)
+            }
+        })
         // get camera Product
         app.get('/cameraProduct', async (req, res) => {
             const result = await cameraCollection.find({}).toArray();
             res.send(result)
         })
-         // get tv Product
+        // get tv Product
         app.get('/tvProduct', async (req, res) => {
             const result = await tvCollection.find({}).toArray();
             res.send(result)
         })
-         // get All Product
+        // get All Product
         app.get('/allProduct', async (req, res) => {
             const result = await allProductsCollection.find({}).toArray();
             res.send(result)
         })
-         // get all Product by Id
+        // get All Product
+        app.post('/allProduct', async (req, res) => {
+            const cursor = req.body;
+            const result = await allProductsCollection.insertOne(cursor);
+            res.send(result)
+        })
+        // get all Product by Id
         app.get('/allProduct/:id', async (req, res) => {
             const id = req?.params?.id;
             const query = { _id: ObjectId(id) };
             const result = await allProductsCollection.findOne(query);
             res.send(result)
         })
-         // uplaod data cart Product
+        // delete one Product by Id
+        app.delete('/allProduct/:id', async (req, res) => {
+            const id = req?.params?.id;
+            const query = { _id: ObjectId(id) };
+            const result = await allProductsCollection.deleteOne(query);
+            res.send(result)
+        })
+        // uplaod data cart Product
         app.post('/cartProduct', async (req, res) => {
             const cursor = req.body;
             const result = await cartProductsCollection.insertOne(cursor);
             res.send(result)
         })
-        
+        // get cart  all Product 
+        app.get('/cartProduct', async (req, res) => {
+            const result = await cartProductsCollection.find({}).toArray();
+            res.send(result)
+        })
         // get cart Product by email
         app.get('/cartProduct/:email', async (req, res) => {
             const email = req?.params?.email;
@@ -72,6 +118,19 @@ async function run() {
             const id = req?.params?.id;
             const query = { _id: ObjectId(id) }
             const result = await cartProductsCollection.deleteOne(query);
+            res.send(result)
+        })
+        // update status cart Product by id
+        app.put('/cartProduct/:id', async (req, res) => {
+            const id = req?.params?.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: 'update'
+                },
+            };
+            const result = await cartProductsCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
         // uplaod data wishList Product
@@ -88,19 +147,19 @@ async function run() {
             const result = await wishListProductCollection.find(query).toArray();
             res.send(result)
         })
-         // get cart Product by id
+        // get cart Product by id
         app.delete('/wishListProduct/:id', async (req, res) => {
             const id = req?.params?.id;
             const query = { _id: ObjectId(id) }
             const result = await wishListProductCollection.deleteOne(query);
             res.send(result)
         })
-         // get all  Review data
+        // get all  Review data
         app.get('/allReview', async (req, res) => {
             const result = await reviewCollection.find({}).toArray();
             res.send(result)
         })
-         // upload review data
+        // upload review data and image base64
         app.post('/addReview', async (req, res) => {
             const name = req.body.name;
             const des = req.body.des;
