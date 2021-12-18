@@ -49,7 +49,7 @@ async function run() {
             res.send(result)
         })
         // add admin role
-        app.put('/makeAdmin/:email', async (req, res) => {
+        app.put('/addAdmin/:email', async (req, res) => {
             const email = req?.params?.email;
             const query = { email: email }
             if (query) {
