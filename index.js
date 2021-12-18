@@ -5,6 +5,8 @@ require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectId;
 const fileUpload = require('express-fileupload');
+const stripe = require("stripe")(process.env.STRYPE_SECRET);
+
 
 const port = process.env.PORT || 5000;
 
@@ -88,6 +90,13 @@ async function run() {
             const result = await allProductsCollection.findOne(query);
             res.send(result)
         })
+        // get camera Product by Id
+        app.get('/cameraProduct/:id', async (req, res) => {
+            const id = req?.params?.id;
+            const query = { _id: ObjectId(id) };
+            const result = await cameraCollection.findOne(query);
+            res.send(result)
+        })
         // delete one Product by Id
         app.delete('/allProduct/:id', async (req, res) => {
             const id = req?.params?.id;
@@ -113,6 +122,19 @@ async function run() {
             const result = await cartProductsCollection.find(query).toArray();
             res.send(result)
         })
+        // update cart Product by email
+        app.put('/cartProduct/:email', async (req, res) => {
+            const email = req?.params?.email;
+            const payment = req.body;
+            const filter = { email: email }
+            const updateDoc = {
+                $set: {
+                    payment: payment
+                },
+            };
+            const result = await cartProductsCollection.updateMany(filter, updateDoc);
+            res.send(result)
+        })
         // get cart Product by id
         app.delete('/cartProduct/:id', async (req, res) => {
             const id = req?.params?.id;
@@ -121,7 +143,7 @@ async function run() {
             res.send(result)
         })
         // update status cart Product by id
-        app.put('/cartProduct/:id', async (req, res) => {
+        app.put('/statusProduct/:id', async (req, res) => {
             const id = req?.params?.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
@@ -137,7 +159,6 @@ async function run() {
         app.post('/wishListProduct', async (req, res) => {
             const cursor = req.body;
             const result = await wishListProductCollection.insertOne(cursor);
-            console.log(result);
             res.send(result)
         })
         // get wishList Product by email
@@ -178,7 +199,20 @@ async function run() {
 
         })
 
+        // payment
+        app.post("/create-payment-intent", async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = paymentInfo.price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ['card'],
+            });
 
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
 
 
 
